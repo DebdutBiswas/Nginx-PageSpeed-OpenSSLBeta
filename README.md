@@ -12,7 +12,7 @@ sudo docker run --cap-drop=all --name nginx -p 80:8080 -p 443:4434 -v /home/ssl/
 In the above example, I am mounting my SSL keys as a read only volume (they are in `/home/ssl/keys` on the host). Similarly, my `nginx.conf` is at `/home/ssl/nginx.conf` on the host.
 
 ## Persistence with systemd Services
-See [this repo](https://github.com/ORGNorthEast/CryptoParty-Newcastle/raw/master/cryptopartynewcastle.org/nginx%20SSL%20Terminator/nginx.conf) for a systemd service you can install to ensure that your container comes back up following a reboot.
+See [this repo](https://github.com/ORGNorthEast/CryptoParty-Newcastle/raw/master/cryptopartynewcastle.org/nginx%20SSL%20Terminator/sslterminator.service) for a systemd service you can install to ensure that your container comes back up following a reboot.
 
 Use the following commands to copy the service into the appropriate place, then reload the service cache and then enable it:
 ```
