@@ -39,3 +39,12 @@ sudo chown -R 1000:1000 /home/ssl/keys && sudo chown 1000:1000 /home/ssl/nginx.c
 I've configured this container so that it runs the whole webserver (including the nginx master process) as an unprivileged user. This means you need to ensure that your `nginx.conf` is listening on ports above 1000 as only the `root` user can listen on 1000 and below.
 
 In my example above, I listen in the container on `8080` for HTTP, and on `4434` for HTTPS.
+
+### SELinux & Permissions
+If you are running an SELinux-enabled host (recommended!), you might run into some issues with Docker containers not being able to write to certain directories (particularly directories inside user homedirs).
+
+Change the SELinux context of your files/directories to allow the container to write as follows:
+```
+sudo chcon -Rt svirt_sandbox_file_t /home/ssl/keys/nginx.conf
+sudo chcon -Rt svirt_sandbox_file_t /home/ssl/keys
+```
