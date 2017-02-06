@@ -1,3 +1,5 @@
+[![](https://images.microbadger.com/badges/image/ajhaydock/nginx.svg)](https://microbadger.com/images/ajhaydock/nginx "Get your own image badge on microbadger.com")
+
 # Nginx-PageSpeed-OpenSSLBeta
 This is a container for deploying nginx with the OpenSSL Beta for RFC-compliant ChaCha support. It also adds the PageSpeed module.
 
