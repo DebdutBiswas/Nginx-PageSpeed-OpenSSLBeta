@@ -31,6 +31,7 @@ RUN useradd nginx --home-dir /usr/share/nginx --no-create-home --shell /sbin/nol
 RUN dnf install -y \
     gcc \
     gcc-c++ \
+    GeoIP-devel \
     git \
     gperftools-devel \
     make \
@@ -102,7 +103,7 @@ RUN cd ~/nginx-$NGNXVER/ \
     --with-http_dav_module \
     --with-http_flv_module \
     --with-http_mp4_module \
-    --with-http_geo_module \
+    --with-http_geoip_module \
     --with-http_gunzip_module \
     --with-http_gzip_static_module \
     --with-http_random_index_module \
