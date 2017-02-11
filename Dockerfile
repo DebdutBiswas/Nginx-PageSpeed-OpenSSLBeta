@@ -12,7 +12,7 @@ FROM fedora:latest
 MAINTAINER Alex Haydock <alex@alexhaydock.co.uk>
 
 # Nginx Version (See: https://nginx.org/en/CHANGES)
-ENV NGNXVER 1.11.8
+ENV NGNXVER 1.11.9
 
 # PageSpeed Version (See: https://modpagespeed.com/doc/release_notes)
 ENV PSPDVER latest-beta
