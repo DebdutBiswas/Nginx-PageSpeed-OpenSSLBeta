@@ -76,7 +76,7 @@ RUN git clone https://github.com/openresty/headers-more-nginx-module.git "$HOME/
 # Removed all the mail modules as I have no intention of using this as a mailserver proxy.
 # The final tweaks are my --add-module lines at the bottom, and the --with-openssl
 # argument, to point the build to the OpenSSL Beta we downloaded earlier.
-WORKDIR /root/nginx-$NGINXVER
+WORKDIR /root/nginx-$NGNXVER
 RUN ./configure \
         --prefix=/usr/share/nginx \
         --sbin-path=/usr/sbin/nginx \
