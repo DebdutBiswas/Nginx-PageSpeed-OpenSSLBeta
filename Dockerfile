@@ -18,7 +18,7 @@ ENV NGNXVER 1.11.9
 ENV PSPDVER latest-beta
 
 # OpenSSL Version (See: https://www.openssl.org/source/)
-ENV OSSLVER 1.1.0d
+ENV OSSLVER 1.1.0e
 
 # Build as root (we drop privileges later when actually running the container)
 USER root
