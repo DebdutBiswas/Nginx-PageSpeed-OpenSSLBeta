@@ -28,9 +28,7 @@ WORKDIR /root
 RUN useradd nginx --home-dir /usr/share/nginx --no-create-home --shell /sbin/nologin
 
 # Update & install deps
-RUN dnf clean all && \
-    dnf upgrade -y && \
-    dnf install -y \
+RUN dnf install -y \
         gcc \
         gcc-c++ \
         GeoIP-devel \
@@ -67,7 +65,6 @@ RUN wget --https-only https://www.openssl.org/source/openssl-$OSSLVER.tar.gz && 
 
 # Download additional modules
 RUN git clone https://github.com/openresty/headers-more-nginx-module.git "$HOME/ngx_headers_more" && \
-    git clone https://github.com/openresty/lua-nginx-module.git "$HOME/ngx_lua" && \
     git clone https://github.com/simpl/ngx_devel_kit.git "$HOME/ngx_devel_kit" && \
     git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module.git "$HOME/ngx_subs_filter"
 
@@ -120,10 +117,9 @@ RUN ./configure \
         --with-google_perftools_module \
         --with-cc-opt='-O2 -g -fPIE -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all --param=ssp-buffer-size=4 -grecord-gcc-switches' \
         --with-ld-opt='-Wl,-z,relro -Wl,-E' \
-        --add-module="$HOME/ngx_pagespeed-$PSPDVER" \
         --with-openssl="$HOME/openssl-$OSSLVER" \
+        --add-module="$HOME/ngx_pagespeed-$PSPDVER" \
         --add-module="$HOME/ngx_headers_more" \
-        --add-module="$HOME/ngx_lua" \
         --add-module="$HOME/ngx_devel_kit" \
         --add-module="$HOME/ngx_subs_filter"
 
