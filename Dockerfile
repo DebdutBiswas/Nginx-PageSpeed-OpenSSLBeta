@@ -8,7 +8,7 @@
 #        docker run --cap-drop=all --name nginx -d -p 80:8080 nginx
 #
 
-FROM fedora
+FROM centos:7
 MAINTAINER Alex Haydock <alex@alexhaydock.co.uk>
 
 # Nginx Version (See: https://nginx.org/en/CHANGES)
@@ -29,7 +29,7 @@ WORKDIR /root
 RUN useradd nginx --home-dir /usr/share/nginx --no-create-home --shell /sbin/nologin
 
 # Update & install deps
-RUN dnf install -y \
+RUN yum install -y \
         gcc \
         gcc-c++ \
         GeoIP-devel \
@@ -41,32 +41,32 @@ RUN dnf install -y \
         unzip \
         wget \
         zlib-devel && \
-    dnf clean all
+    yum clean all
 
 # Copy nginx source into container
 COPY src/nginx-$NGXVERSION.tar.gz nginx-$NGXVERSION.tar.gz
 
 # Import nginx team signing keys to verify the source code tarball
-RUN gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys $NGXSIGKEY
+RUN gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys $NGXSIGKEY
 
 # Verify this source has been signed with a valid nginx team key
-RUN wget --https-only "https://nginx.org/download/nginx-$NGXVERSION.tar.gz.asc" && \
+RUN wget "https://nginx.org/download/nginx-$NGXVERSION.tar.gz.asc" && \
     out=$(gpg --status-fd 1 --verify "nginx-$NGXVERSION.tar.gz.asc" 2>/dev/null) && \
     if echo "$out" | grep -qs "\[GNUPG:\] GOODSIG" && echo "$out" | grep -qs "\[GNUPG:\] VALIDSIG"; then echo "Good signature on nginx source file."; else echo "GPG VERIFICATION OF SOURCE CODE FAILED!" && echo "EXITING!" && exit 100; fi
 
 # Download PageSpeed
-RUN wget --https-only https://github.com/pagespeed/ngx_pagespeed/archive/$PSPDVER.tar.gz && \
+RUN wget https://github.com/pagespeed/ngx_pagespeed/archive/$PSPDVER.tar.gz && \
     tar -xzvf $PSPDVER.tar.gz && \
     rm -v $PSPDVER.tar.gz && \
     cd ngx_pagespeed-$PSPDVER/ && \
     echo "Downloading PSOL binary from the URL specified in the PSOL_BINARY_URL file..." && \
     PSOLURL=$(cat PSOL_BINARY_URL | grep https: | sed 's/$BIT_SIZE_NAME/x64/g') && \
-    wget --https-only $PSOLURL && \
+    wget $PSOLURL && \
     tar -xzvf *.tar.gz && \
     rm -v *.tar.gz
 
 # Download OpenSSL
-RUN wget --https-only https://www.openssl.org/source/openssl-$OSSLVER.tar.gz && \
+RUN wget https://www.openssl.org/source/openssl-$OSSLVER.tar.gz && \
     tar -xzvf openssl-$OSSLVER.tar.gz && \
     rm -v openssl-$OSSLVER.tar.gz
 
@@ -76,11 +76,11 @@ RUN git clone https://github.com/openresty/headers-more-nginx-module.git "$HOME/
     git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module.git "$HOME/ngx_subs_filter"
 
 # Prepare nginx source
-RUN tar -xzvf nginx-$NGNXVER.tar.gz && \
-    rm -v nginx-$NGNXVER.tar.gz
+RUN tar -xzvf nginx-$NGXVERSION.tar.gz && \
+    rm -v nginx-$NGXVERSION.tar.gz
 
 # Switch directory
-WORKDIR "$HOME/nginx-$NGXVERSION/"
+WORKDIR "/root/nginx-$NGXVERSION/"
 
 # Configure Nginx
 # Config options stolen from the current packaged version of nginx for Fedora 25.
