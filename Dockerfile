@@ -20,6 +20,7 @@ ENV PSPDVER latest-beta
 
 # OpenSSL Version (See: https://www.openssl.org/source/)
 ENV OSSLVER 1.1.0e
+ENV OSSLSIGKEY 0E604491
 
 # Build as root (we drop privileges later when actually running the container)
 USER root
@@ -43,16 +44,29 @@ RUN yum install -y \
         zlib-devel && \
     yum clean all
 
-# Copy nginx source into container
+# Copy sources into container
 COPY src/nginx-$NGXVERSION.tar.gz nginx-$NGXVERSION.tar.gz
+COPY src/openssl-$OSSLVER.tar.gz openssl-$OSSLVER.tar.gz
 
-# Import nginx team signing keys to verify the source code tarball
-RUN gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys $NGXSIGKEY
-
-# Verify this source has been signed with a valid nginx team key
-RUN wget "https://nginx.org/download/nginx-$NGXVERSION.tar.gz.asc" && \
+# Import nginx signing keys and verify the source code tarball
+RUN gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys $NGXSIGKEY && \
+    wget "https://nginx.org/download/nginx-$NGXVERSION.tar.gz.asc" && \
     out=$(gpg --status-fd 1 --verify "nginx-$NGXVERSION.tar.gz.asc" 2>/dev/null) && \
-    if echo "$out" | grep -qs "\[GNUPG:\] GOODSIG" && echo "$out" | grep -qs "\[GNUPG:\] VALIDSIG"; then echo "Good signature on nginx source file."; else echo "GPG VERIFICATION OF SOURCE CODE FAILED!" && echo "EXITING!" && exit 100; fi
+    if echo "$out" | grep -qs "\[GNUPG:\] GOODSIG" && echo "$out" | grep -qs "\[GNUPG:\] VALIDSIG"; then echo "Good signature on nginx source."; else echo "GPG VERIFICATION OF NGINX SOURCE FAILED!" && echo "EXITING!" && exit 100; fi
+
+# Extract nginx source
+RUN tar -xzvf nginx-$NGXVERSION.tar.gz && \
+    rm -v nginx-$NGXVERSION.tar.gz
+
+# Import OpenSSL signing keys and verify the source code tarball
+RUN gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys $OSSLSIGKEY && \
+    wget "https://www.openssl.org/source/openssl-$OSSLVER.tar.gz.asc" && \
+    out=$(gpg --status-fd 1 --verify "openssl-$OSSLVER.tar.gz.asc" 2>/dev/null) && \
+    if echo "$out" | grep -qs "\[GNUPG:\] GOODSIG" && echo "$out" | grep -qs "\[GNUPG:\] VALIDSIG"; then echo "Good signature on OpenSSL source."; else echo "GPG VERIFICATION OF OPENSSL SOURCE FAILED!" && echo "EXITING!" && exit 100; fi
+
+# Extract OpenSSL source
+RUN tar -xzvf openssl-$OSSLVER.tar.gz && \
+    rm -v openssl-$OSSLVER.tar.gz
 
 # Download PageSpeed
 RUN wget https://github.com/pagespeed/ngx_pagespeed/archive/$PSPDVER.tar.gz && \
@@ -65,19 +79,10 @@ RUN wget https://github.com/pagespeed/ngx_pagespeed/archive/$PSPDVER.tar.gz && \
     tar -xzvf *.tar.gz && \
     rm -v *.tar.gz
 
-# Download OpenSSL
-RUN wget https://www.openssl.org/source/openssl-$OSSLVER.tar.gz && \
-    tar -xzvf openssl-$OSSLVER.tar.gz && \
-    rm -v openssl-$OSSLVER.tar.gz
-
 # Download additional modules
 RUN git clone https://github.com/openresty/headers-more-nginx-module.git "$HOME/ngx_headers_more" && \
     git clone https://github.com/simpl/ngx_devel_kit.git "$HOME/ngx_devel_kit" && \
     git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module.git "$HOME/ngx_subs_filter"
-
-# Prepare nginx source
-RUN tar -xzvf nginx-$NGXVERSION.tar.gz && \
-    rm -v nginx-$NGXVERSION.tar.gz
 
 # Switch directory
 WORKDIR "/root/nginx-$NGXVERSION/"
