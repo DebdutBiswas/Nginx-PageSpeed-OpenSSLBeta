@@ -12,7 +12,8 @@ FROM fedora
 MAINTAINER Alex Haydock <alex@alexhaydock.co.uk>
 
 # Nginx Version (See: https://nginx.org/en/CHANGES)
-ENV NGNXVER 1.11.9
+ENV NGXVERSION 1.11.10
+ENV NGXSIGKEY B0F4253373F8F6F510D42178520A9993A1C052F8
 
 # PageSpeed Version (See: https://modpagespeed.com/doc/release_notes)
 ENV PSPDVER latest-beta
@@ -42,10 +43,16 @@ RUN dnf install -y \
         zlib-devel && \
     dnf clean all
 
-# Download nginx
-RUN wget --https-only https://nginx.org/download/nginx-$NGNXVER.tar.gz && \
-    tar -xzvf nginx-$NGNXVER.tar.gz && \
-    rm -v nginx-$NGNXVER.tar.gz
+# Copy nginx source into container
+COPY src/nginx-$NGXVERSION.tar.gz nginx-$NGXVERSION.tar.gz
+
+# Import nginx team signing keys to verify the source code tarball
+RUN gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys $NGXSIGKEY
+
+# Verify this source has been signed with a valid nginx team key
+RUN wget --https-only "https://nginx.org/download/nginx-$NGXVERSION.tar.gz.asc" && \
+    out=$(gpg --status-fd 1 --verify "nginx-$NGXVERSION.tar.gz.asc" 2>/dev/null) && \
+    if echo "$out" | grep -qs "\[GNUPG:\] GOODSIG" && echo "$out" | grep -qs "\[GNUPG:\] VALIDSIG"; then echo "Good signature on nginx source file."; else echo "GPG VERIFICATION OF SOURCE CODE FAILED!" && echo "EXITING!" && exit 100; fi
 
 # Download PageSpeed
 RUN wget --https-only https://github.com/pagespeed/ngx_pagespeed/archive/$PSPDVER.tar.gz && \
@@ -68,15 +75,22 @@ RUN git clone https://github.com/openresty/headers-more-nginx-module.git "$HOME/
     git clone https://github.com/simpl/ngx_devel_kit.git "$HOME/ngx_devel_kit" && \
     git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module.git "$HOME/ngx_subs_filter"
 
+# Prepare nginx source
+RUN tar -xzvf nginx-$NGNXVER.tar.gz && \
+    rm -v nginx-$NGNXVER.tar.gz
+
+# Switch directory
+WORKDIR "$HOME/nginx-$NGXVERSION/"
+
 # Configure Nginx
 # Config options stolen from the current packaged version of nginx for Fedora 25.
 # cc-opt tweaked to use -fstack-protector-all, and -fPIE added to build position-independent.
-# Removed any of the modules that the Fedora team was building with "=dynamic" as they stop us being able to build with -fPIE and require the less-hardened -fPIC option instead. (https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html)
+# Removed any of the modules that the Fedora team was building with "=dynamic" as they stop us being able
+# to build with -fPIE and require the less-hardened -fPIC option instead. (https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html)
 # Also removed the --with-debug flag (I don't need debug-level logging) and --with-ipv6 as the flag is now deprecated.
 # Removed all the mail modules as I have no intention of using this as a mailserver proxy.
 # The final tweaks are my --add-module lines at the bottom, and the --with-openssl
 # argument, to point the build to the OpenSSL Beta we downloaded earlier.
-WORKDIR /root/nginx-$NGNXVER
 RUN ./configure \
         --prefix=/usr/share/nginx \
         --sbin-path=/usr/sbin/nginx \
@@ -124,7 +138,8 @@ RUN ./configure \
         --add-module="$HOME/ngx_subs_filter"
 
 # Build Nginx
-RUN make && make install
+RUN make && \
+    make install
 
 # Make sure the permissions are set correctly on our webroot, logdir and pidfile so that we can run the webserver as non-root.
 RUN chown -R nginx:nginx /usr/share/nginx && \
