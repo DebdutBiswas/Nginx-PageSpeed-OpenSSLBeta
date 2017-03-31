@@ -84,6 +84,10 @@ RUN git clone https://github.com/openresty/headers-more-nginx-module.git "$HOME/
     git clone https://github.com/simpl/ngx_devel_kit.git "$HOME/ngx_devel_kit" && \
     git clone https://github.com/yaoweibin/ngx_http_substitutions_filter_module.git "$HOME/ngx_subs_filter"
 
+# Add nginx user and group
+RUN groupadd -r nginx && \
+    useradd --system --gid nginx --home-dir /usr/share/nginx nginx
+
 # Switch directory
 WORKDIR "/root/nginx-$NGXVERSION/"
 
