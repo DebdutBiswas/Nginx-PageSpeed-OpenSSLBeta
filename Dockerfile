@@ -27,7 +27,7 @@ USER root
 WORKDIR /root
 
 # Add 'nginx' user
-RUN useradd nginx --system --home-dir /usr/share/nginx --no-create-home --shell /sbin/nologin
+RUN useradd nginx --system --uid 666  --home-dir /usr/share/nginx --no-create-home --shell /sbin/nologin
 
 # Update & install deps
 RUN yum install -y \
