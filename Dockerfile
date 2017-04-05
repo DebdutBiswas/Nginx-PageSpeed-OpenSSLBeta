@@ -134,8 +134,8 @@ RUN ./configure \
         --with-stream \
         --with-stream_ssl_module \
         --with-google_perftools_module \
-        --with-cc-opt='-O2 -g -fPIE -pipe -Wall -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all --param=ssp-buffer-size=4 -grecord-gcc-switches' \
-        --with-ld-opt='-Wl,-z,relro -Wl,-E' \
+        --with-cc-opt='-fPIE -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all' \
+        --with-ld-opt='-Wl,-z,relro' \
         --with-openssl="$HOME/openssl-$OSSLVER" \
         --add-module="$HOME/ngx_pagespeed-$PSPDVER" \
         --add-module="$HOME/ngx_headers_more" \
